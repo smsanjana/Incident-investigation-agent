@@ -1,0 +1,20 @@
+{
+  "incident_id": "INC-002",
+  "title": "Order Service Intermittent Slow Responses and Failures",
+  "start_time": "2025-07-21T14:05:00Z",
+  "detection_time": "2025-07-21T14:18:00Z",
+  "resolution_time": null,
+  "affected_service": "order-service",
+  "severity": "SEV-3",
+  "customer_impact": "Intermittent slow responses. Approximately 6% of requests failing with HTTP 503. Some customers seeing delayed order confirmations.",
+  "initial_symptoms": [
+    "Increased HTTP 503 responses on order-service API",
+    "Elevated request latency (p99 > 3500ms, baseline ~200ms)",
+    "Database timeout errors reported",
+    "Recent deployment of order-service v2.4.2 at 2025-07-21T13:20:00Z",
+    "Scheduled batch job order-export started at 2025-07-21T14:00:00Z"
+  ],
+  "reporter": "monitoring-bot@company.com",
+  "reporter_notes": "Automated alert: 503 rate crossed threshold. Latency also elevated. Both a deployment and a batch job are in the window. Logs appear incomplete - DB client logs may be truncated. Needs manual investigation.",
+  "tags": ["order-service", "database", "503", "latency", "batch-job", "deployment", "incomplete-evidence"]
+}

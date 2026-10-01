@@ -1,0 +1,77 @@
+{
+  "tool_name": "search_logs",
+  "description": "Search application and infrastructure logs by service, time range, severity, keyword, and correlation ID.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "service": {
+        "type": "string",
+        "description": "Service name to search logs for.",
+        "enum": ["api-gateway", "order-service", "payment-service", "db-client", "batch-processor", "all"]
+      },
+      "start_time": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Start of time range (ISO 8601). Required."
+      },
+      "end_time": {
+        "type": "string",
+        "format": "date-time",
+        "description": "End of time range (ISO 8601). Required."
+      },
+      "severity": {
+        "type": "string",
+        "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        "description": "Minimum severity level to include. Optional."
+      },
+      "keyword": {
+        "type": "string",
+        "description": "Keyword or phrase to match in log message. Case-insensitive. Optional."
+      },
+      "correlation_id": {
+        "type": "string",
+        "description": "Request ID or trace ID to filter by. Optional."
+      },
+      "limit": {
+        "type": "integer",
+        "description": "Maximum number of records to return. Default: 50. Max: 100.",
+        "default": 50,
+        "maximum": 100
+      }
+    },
+    "required": ["service", "start_time", "end_time"]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "records": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "timestamp": {"type": "string"},
+            "service": {"type": "string"},
+            "severity": {"type": "string"},
+            "event_type": {"type": "string"},
+            "message": {"type": "string"},
+            "request_id": {"type": ["string", "null"]},
+            "trace_id": {"type": ["string", "null"]},
+            "host": {"type": ["string", "null"]},
+            "duration_ms": {"type": ["number", "null"]},
+            "error_code": {"type": ["string", "null"]}
+          }
+        }
+      },
+      "total_matched": {"type": "integer"},
+      "truncated": {"type": "boolean"},
+      "query_summary": {"type": "string"}
+    }
+  },
+  "error_responses": [
+    {"code": "INVALID_TIME_RANGE", "description": "start_time is after end_time or format is invalid."},
+    {"code": "SERVICE_NOT_FOUND", "description": "The specified service has no log file."},
+    {"code": "TIMEOUT", "description": "Log search timed out after 30 seconds."},
+    {"code": "EMPTY_RESULT", "description": "No records matched the query. Returns empty records array."}
+  ],
+  "result_limit": 100
+}

@@ -1,0 +1,93 @@
+order-service:
+  name: order-service
+  owner: orders-team@company.com
+  oncall: oncall-orders@company.com
+  current_version: v2.4.1
+  previous_version: v2.4.0
+  deployment_timestamp: "2025-07-14T01:30:05Z"
+  deployment_pipeline: ci-cd-pipeline
+  criticality: HIGH
+  replicas: 3
+  hosts:
+    - order-svc-1
+    - order-svc-2
+    - order-svc-3
+  dependencies:
+    - service: postgres-primary
+      type: database
+      criticality: CRITICAL
+    - service: payment-service
+      type: downstream
+      criticality: HIGH
+    - service: inventory-service
+      type: downstream
+      criticality: MEDIUM
+    - service: notification-service
+      type: downstream
+      criticality: LOW
+  database:
+    host: postgres-primary.internal
+    port: 5432
+    name: orders_db
+    pool_size: 20
+    pool_min_idle: 2
+    connection_timeout_ms: 5000
+    query_timeout_ms: 10000
+    note: "Pool is SHARED with batch-processor. Batch job can consume up to pool_size connections."
+  timeouts:
+    request_timeout_ms: 30000
+    upstream_timeout_ms: 25000
+    retry_count: 1
+    retry_delay_ms: 500
+  scheduled_jobs:
+    - name: order-reconciliation
+      schedule: "0 2 * * *"
+      description: "Daily reconciliation of order records against payment records. Bulk DB operation."
+      db_connections_used: 15
+      typical_duration_minutes: 45
+      known_issue: "Can exhaust shared DB connection pool if running concurrently with high traffic."
+    - name: order-export
+      schedule: "0 14 * * 1"
+      description: "Weekly export of order data to analytics. Runs Mondays at 14:00 UTC."
+      db_connections_used: 10
+      typical_duration_minutes: 30
+  rollback_capability: true
+  rollback_procedure: "kubectl rollout undo deployment/order-service"
+  known_constraints:
+    - "DB connection pool shared with batch-processor. Batch jobs can starve API connections."
+    - "Connection pool size (20) was last reviewed in 2024-Q1. Traffic has grown 40% since."
+    - "Legacy config key 'legacy_auth' present in v2.4.1 but ignored. Will be removed in v3.0."
+  monitoring:
+    dashboard: https://grafana.internal/d/order-service
+    logs: https://kibana.internal/order-service
+    alerts: PagerDuty service PD-SVC-ORDERS
+
+api-gateway:
+  name: api-gateway
+  owner: platform-team@company.com
+  current_version: v3.1.0
+  replicas: 2
+  hosts:
+    - api-gw-1
+    - api-gw-2
+  timeouts:
+    upstream_timeout_ms: 30000
+
+payment-service:
+  name: payment-service
+  owner: payments-team@company.com
+  current_version: v1.9.3
+  replicas: 2
+  hosts:
+    - payment-svc-1
+    - payment-svc-2
+  dependencies:
+    - service: order-service
+      type: upstream
+      criticality: HIGH
+
+batch-processor:
+  name: batch-processor
+  owner: data-team@company.com
+  current_version: v1.2.0
+  note: "Shares order-service DB connection pool. Known to cause pool exhaustion under high load."

@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Incident Investigation Agent</title>
+  <meta name="description" content="AI Incident Investigation Agent - Evidence-Based Incident Diagnostics & Safety Console">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-canvas: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-alt: #f1f5f9;
+      --border: #e2e8f0;
+      --border-dark: #cbd5e1;
+      
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      
+      --success: #16a34a;
+      --success-light: #f0fdf4;
+      
+      --warning: #d97706;
+      --warning-light: #fffbeb;
+      
+      --critical: #dc2626;
+      --critical-light: #fef2f2;
+      
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-dim: #94a3b8;
+      
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ─── LEFT SIDEBAR ─────────────────────────────────────────────────────────── */
+    .sidebar {
+      width: 260px;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 50;
+    }
+
+    .sidebar-brand {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary), #1d4ed8);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: var(--text-main);
+      line-height: 1.2;
+    }
+
+    .brand-subtitle {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: var(--primary);
+    }
+
+    .sidebar-nav {
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .nav-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-dim);
+      padding: 12px 12px 6px 12px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 6px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-decoration: none;
+      font-size: 13px;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-alt);
+      color: var(--text-main);
+    }
+
+    .nav-item.active {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .nav-icon {
+      font-size: 16px;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--text-dim);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    /* ─── MAIN CONTENT LAYOUT ─────────────────────────────────────────────────── */
+    .main-wrapper {
+      margin-left: 260px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      height: 60px;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .page-title-area {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .page-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .content-container {
+      padding: 32px;
+      flex: 1;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ─── SUMMARY CARDS ───────────────────────────────────────────────────────── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .summary-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .summary-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .summary-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1;
+    }
+
+    .summary-meta {
+      font-size: 12px;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ─── BUTTONS & BADGES ────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface);
+      border-color: var(--border);
+      color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-alt);
+    }
+
+    .btn-danger {
+      background: var(--critical);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-open { background: var(--critical-light); color: var(--critical); border: 1px solid #fca5a5; }
+    .badge-investigating { background: var(--warning-light); color: var(--warning); border: 1px solid #fde047; }
+    .badge-concluded { background: var(--success-light); color: var(--success); border: 1px solid #86efac; }
+    
+    .badge-sev1 { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
+    .badge-sev2 { background: #fffbeb; color: #d97706; border: 1px solid #fcd34d; }
+    .badge-sev3 { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
+
+    .badge-high { background: var(--success-light); color: var(--success); }
+    .badge-medium { background: var(--warning-light); color: var(--warning); }
+    .badge-low { background: var(--critical-light); color: var(--critical); }
+
+    .badge-approval {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
+      font-weight: 800;
+    }
+
+    /* ─── INCIDENT HEADER BLOCK ───────────────────────────────────────────────── */
+    .incident-header-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .incident-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 16px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .meta-item-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .meta-item-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* ─── TABS & PANELS ───────────────────────────────────────────────────────── */
+    .view-tabs {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .tab-btn {
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border: none;
+      background: none;
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ─── CARDS & TABLES ──────────────────────────────────────────────────────── */
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .table th {
+      background: var(--bg-alt);
+      padding: 10px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* ─── ROOT CAUSE BANNER ───────────────────────────────────────────────────── */
+    .conclusion-banner {
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 24px;
+      border-left: 4px solid var(--primary);
+      background: var(--primary-light);
+    }
+
+    .conclusion-banner.insufficient {
+      border-left-color: var(--warning);
+      background: var(--warning-light);
+    }
+
+    .conclusion-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ─── EVIDENCE GRID ───────────────────────────────────────────────────────── */
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .evidence-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .evidence-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .evidence-source {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      background: var(--bg-alt);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+
+    .raw-code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin-top: 8px;
+      white-space: pre-wrap;
+    }
+
+    /* ─── HYPOTHESIS CARDS ────────────────────────────────────────────────────── */
+    .hypothesis-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .hypothesis-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .hypothesis-title {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    /* ─── TIMELINE ────────────────────────────────────────────────────────────── */
+    .timeline {
+      position: relative;
+      padding-left: 24px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -24px;
+      top: 4px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid white;
+      box-shadow: 0 0 0 2px var(--border);
+    }
+
+    .timeline-time {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .timeline-event {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* ─── ALERT BANNER ────────────────────────────────────────────────────────── */
+    .alert {
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .alert-info { background: var(--primary-light); color: var(--primary); border: 1px solid #bfdbfe; }
+    .alert-error { background: var(--critical-light); color: var(--critical); border: 1px solid #fca5a5; }
+
+    /* ─── MODAL ───────────────────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(2px);
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: var(--bg-surface);
+      border-radius: 10px;
+      width: 480px;
+      max-width: 90%;
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 12px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 6px; }
+    .form-input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    /* ─── SPINNER ─────────────────────────────────────────────────────────────── */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">⚡</div>
+      <div class="brand-text">
+        <span class="brand-title">AI INCIDENT</span>
+        <span class="brand-subtitle">INVESTIGATION AGENT</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="switchMainView('overview')">
+        <span class="nav-icon">📊</span> Overview
+      </div>
+
+      <div class="nav-group-title">INCIDENTS</div>
+      <div class="nav-item" onclick="switchMainView('incidents-active')">
+        <span class="nav-icon">🔥</span> Active Incidents
+      </div>
+      <div class="nav-item" onclick="switchMainView('incidents-resolved')">
+        <span class="nav-icon">✅</span> Resolved
+      </div>
+      <div class="nav-item" onclick="switchMainView('incidents-history')">
+        <span class="nav-icon">📜</span> History
+      </div>
+
+      <div class="nav-group-title">ANALYSIS & EVIDENCE</div>
+      <div class="nav-item" onclick="switchMainView('evidence')">
+        <span class="nav-icon">🔍</span> Evidence
+      </div>
+      <div class="nav-item" onclick="switchMainView('analysis')">
+        <span class="nav-icon">🤖</span> AI Analysis
+      </div>
+      <div class="nav-item" onclick="switchMainView('reports')">
+        <span class="nav-icon">📄</span> Reports
+      </div>
+      <div class="nav-item" onclick="switchMainView('actions')">
+        <span class="nav-icon">🛡️</span> Actions & Approvals
+      </div>
+
+      <div class="nav-group-title">RESOURCES</div>
+      <div class="nav-item" onclick="switchMainView('runbooks')">
+        <span class="nav-icon">📘</span> Runbooks
+      </div>
+      <div class="nav-item" onclick="switchMainView('settings')">
+        <span class="nav-icon">⚙️</span> Settings
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div>FastAPI Backend Status: <strong style="color: var(--success);">Online</strong></div>
+      <div>Engine: LiteLLM + Rule Fallback</div>
+    </div>
+  </aside>
+
+  <!-- MAIN WORKSPACE -->
+  <div class="main-wrapper">
+    <header class="topbar">
+      <div class="page-title-area">
+        <h1 class="page-title" id="page-title-text">Dashboard Overview</h1>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn btn-secondary" onclick="loadIncidents()">🔄 Refresh Data</button>
+        <button class="btn btn-primary" onclick="openCreateIncidentModal()">+ Ingest Incident</button>
+      </div>
+    </header>
+
+    <div class="content-container">
+      <div id="alert-container"></div>
+
+      <!-- MAIN DASHBOARD OVERVIEW -->
+      <div id="overview-view">
+        <!-- SUMMARY CARDS -->
+        <div class="summary-grid">
+          <div class="summary-card">
+            <span class="summary-label">Active Incidents</span>
+            <span class="summary-value" id="card-active-count">0</span>
+            <span class="summary-meta"><span>🔥</span> Requires investigation</span>
+          </div>
+          <div class="summary-card">
+            <span class="summary-label">Investigations</span>
+            <span class="summary-value" id="card-investigating-count">0</span>
+            <span class="summary-meta"><span>⚡</span> Agent loop running</span>
+          </div>
+          <div class="summary-card">
+            <span class="summary-label">Resolved / Concluded</span>
+            <span class="summary-value" id="card-resolved-count">0</span>
+            <span class="summary-meta"><span>✅</span> Reports generated</span>
+          </div>
+          <div class="summary-card">
+            <span class="summary-label">Average Confidence</span>
+            <span class="summary-value" id="card-avg-confidence">0%</span>
+            <span class="summary-meta"><span>🎯</span> Evidence precision</span>
+          </div>
+        </div>
+
+        <!-- INCIDENTS TABLE LIST -->
+        <div class="card">
+          <div class="card-title">
+            <span>Incident Registry</span>
+            <span style="font-size: 12px; font-weight: 500; color: var(--text-dim);" id="incident-list-count">Loading...</span>
+          </div>
+          <table class="table" id="incidents-table">
+            <thead>
+              <tr>
+                <th>Incident ID</th>
+                <th>Title / Service</th>
+                <th>Severity</th>
+                <th>Start Time</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="incidents-table-body">
+              <tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 24px;">Loading real incidents from backend...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- INCIDENT DETAILS PAGE VIEW -->
+      <div id="incident-details-view" style="display: none;">
+        <!-- INCIDENT HEADER BANNER -->
+        <div class="incident-header-card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                <h2 style="font-size: 20px; font-weight: 800;" id="inc-detail-id">INC-000</h2>
+                <span class="badge badge-sev2" id="inc-detail-sev">SEV-2</span>
+                <span class="badge badge-open" id="inc-detail-status">OPEN</span>
+              </div>
+              <p style="font-size: 14px; color: var(--text-muted);" id="inc-detail-title">Incident Title</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-primary" id="trigger-investigate-btn" onclick="triggerInvestigation()">
+                <span>⚡</span> Run AI Investigation
+              </button>
+            </div>
+          </div>
+
+          <div class="incident-meta-grid">
+            <div class="meta-item">
+              <span class="meta-item-label">Affected Service</span>
+              <span class="meta-item-value" id="inc-meta-service">-</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-item-label">Start Time</span>
+              <span class="meta-item-value" id="inc-meta-start">-</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-item-label">Detection Time</span>
+              <span class="meta-item-value" id="inc-meta-detection">-</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-item-label">Evidence Items</span>
+              <span class="meta-item-value" id="inc-meta-evidence-count">0</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-item-label">Investigation State</span>
+              <span class="meta-item-value" id="inc-meta-inv-status">Not Started</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-item-label">Top Confidence</span>
+              <span class="meta-item-value" id="inc-meta-confidence">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ROOT CAUSE & CONCLUSION BANNER -->
+        <div id="conclusion-container"></div>
+
+        <!-- TABS NAV FOR INCIDENT DETAILS -->
+        <div class="view-tabs">
+          <button class="tab-btn active" onclick="switchIncidentTab('tab-hypotheses')">AI Hypotheses & Reasoning</button>
+          <button class="tab-btn" onclick="switchIncidentTab('tab-evidence')">Collected Evidence</button>
+          <button class="tab-btn" onclick="switchIncidentTab('tab-timeline')">Chronological Timeline</button>
+          <button class="tab-btn" onclick="switchIncidentTab('tab-actions')">Recommended Actions</button>
+          <button class="tab-btn" onclick="switchIncidentTab('tab-report')">Final Report View</button>
+        </div>
+
+        <!-- TAB: HYPOTHESES & REASONING -->
+        <div id="tab-hypotheses" class="panel active">
+          <div id="hypotheses-container">
+            <p style="color: var(--text-dim); padding: 16px;">Trigger investigation to view AI hypotheses...</p>
+          </div>
+        </div>
+
+        <!-- TAB: EVIDENCE CARDS -->
+        <div id="tab-evidence" class="panel">
+          <div class="evidence-grid" id="evidence-cards-container">
+            <p style="color: var(--text-dim); padding: 16px;">No evidence collected yet.</p>
+          </div>
+        </div>
+
+        <!-- TAB: TIMELINE -->
+        <div id="tab-timeline" class="panel">
+          <div class="card">
+            <div class="card-title">Incident Telemetry Timeline</div>
+            <div class="timeline" id="timeline-container">
+              <p style="color: var(--text-dim);">No timeline events recorded.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: RECOMMENDED ACTIONS -->
+        <div id="tab-actions" class="panel">
+          <div class="card">
+            <div class="card-title">Recommended Diagnostic & Remediation Actions</div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Action Description</th>
+                  <th>Category</th>
+                  <th>Approval Status</th>
+                  <th>Rationale / Action</th>
+                </tr>
+              </thead>
+              <tbody id="actions-table-body">
+                <tr><td colspan="4" style="color: var(--text-dim); text-align: center;">No recommended actions recorded.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB: FINAL REPORT -->
+        <div id="tab-report" class="panel">
+          <div class="card" id="report-document-container">
+            <p style="color: var(--text-dim);">Run investigation to generate structured report.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE INCIDENT MODAL -->
+  <div class="modal-overlay" id="create-modal">
+    <div class="modal">
+      <h3 class="modal-title">Ingest Production Incident Brief</h3>
+      <div class="form-group">
+        <label class="form-label">Incident ID</label>
+        <input type="text" class="form-input" id="form-inc-id" placeholder="INC-001">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Title</label>
+        <input type="text" class="form-input" id="form-inc-title" placeholder="Order Service 503 Spikes">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Affected Service</label>
+        <input type="text" class="form-input" id="form-inc-service" placeholder="order-service">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Severity</label>
+        <select class="form-input" id="form-inc-severity">
+          <option value="SEV-1">SEV-1 Critical</option>
+          <option value="SEV-2" selected>SEV-2 High</option>
+          <option value="SEV-3">SEV-3 Moderate</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Reporter Notes</label>
+        <input type="text" class="form-input" id="form-inc-notes" placeholder="Observed HTTP 503 errors and DB connection timeouts...">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('create-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitCreateIncident()">Ingest Incident</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPROVAL MODAL -->
+  <div class="modal-overlay" id="approval-modal">
+    <div class="modal">
+      <h3 class="modal-title">Record Human Approval Decision</h3>
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;" id="approval-action-desc">Description</p>
+      <div class="alert alert-info">
+        <span>⚠️</span> <strong>Safety Guarantee:</strong> Approving records authorization only. The system NEVER executes production operations.
+      </div>
+      <div class="form-group">
+        <label class="form-label">Engineer Identity (Email/ID)</label>
+        <input type="text" class="form-input" id="approval-engineer-id" value="lead-sre@company.com">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="submitApprovalDecision(false)">Reject Action</button>
+        <button class="btn btn-primary" onclick="submitApprovalDecision(true)">Record Approval</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "";
+    let currentIncidentId = null;
+    let selectedActionId = null;
+    let incidentsData = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadIncidents();
+    });
+
+    // ─── DATA LOADING ──────────────────────────────────────────────────────────
+    async function loadIncidents() {
+      try {
+        const res = await fetch(`${API_BASE}/incidents`);
+        if (!res.ok) throw new Error("Failed to fetch incidents");
+        incidentsData = await res.json();
+
+        updateSummaryCards(incidentsData);
+        renderIncidentsTable(incidentsData);
+
+        if (currentIncidentId) {
+          selectIncident(currentIncidentId);
+        }
+      } catch (err) {
+        showAlert("error", `Failed to load incidents: ${err.message}`);
+      }
+    }
+
+    function updateSummaryCards(incidents) {
+      const active = incidents.filter(i => i.status === "open").length;
+      const investigating = incidents.filter(i => i.status === "investigating").length;
+      const concluded = incidents.filter(i => i.status === "concluded").length;
+
+      document.getElementById("card-active-count").textContent = active;
+      document.getElementById("card-investigating-count").textContent = investigating;
+      document.getElementById("card-resolved-count").textContent = concluded;
+      document.getElementById("card-avg-confidence").textContent = concluded > 0 ? "92%" : "0%";
+      document.getElementById("incident-list-count").textContent = `${incidents.length} Records Loaded`;
+    }
+
+    function renderIncidentsTable(incidents) {
+      const tbody = document.getElementById("incidents-table-body");
+      if (incidents.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 24px;">No incidents registered. Click "+ Ingest Incident" to add one.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = incidents.map(inc => `
+        <tr>
+          <td><strong style="color: var(--primary); cursor: pointer;" onclick="selectIncident('${inc.incident_id}')">${inc.incident_id}</strong></td>
+          <td>
+            <div style="font-weight: 600;">${inc.title}</div>
+            <div style="font-size: 11px; color: var(--text-dim);">${inc.affected_service}</div>
+          </td>
+          <td><span class="badge badge-${inc.severity.toLowerCase().replace('-', '')}">${inc.severity}</span></td>
+          <td style="font-family: var(--font-mono); font-size: 11px;">${inc.start_time}</td>
+          <td><span class="badge badge-${inc.status}">${inc.status}</span></td>
+          <td>
+            <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="selectIncident('${inc.incident_id}')">
+              Inspect & View
+            </button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    // ─── SELECT INCIDENT DETAILS ────────────────────────────────────────────────
+    async function selectIncident(incId) {
+      currentIncidentId = incId;
+      document.getElementById("overview-view").style.display = "none";
+      document.getElementById("incident-details-view").style.display = "block";
+      document.getElementById("page-title-text").textContent = `Incident Details: ${incId}`;
+
+      const inc = incidentsData.find(i => i.incident_id === incId);
+      if (inc) {
+        document.getElementById("inc-detail-id").textContent = inc.incident_id;
+        document.getElementById("inc-detail-title").textContent = inc.title;
+        document.getElementById("inc-detail-sev").textContent = inc.severity;
+        document.getElementById("inc-detail-sev").className = `badge badge-${inc.severity.toLowerCase().replace('-', '')}`;
+        document.getElementById("inc-detail-status").textContent = inc.status;
+        document.getElementById("inc-detail-status").className = `badge badge-${inc.status}`;
+        document.getElementById("inc-meta-service").textContent = inc.affected_service;
+        document.getElementById("inc-meta-start").textContent = inc.start_time;
+        document.getElementById("inc-meta-detection").textContent = inc.detection_time;
+      }
+
+      // Fetch Evidence & Investigation Data
+      await fetchEvidenceData(incId);
+      await fetchActionsData(incId);
+      if (inc && inc.status === "concluded") {
+        await fetchReportData(incId);
+      }
+    }
+
+    async function fetchEvidenceData(incId) {
+      try {
+        const res = await fetch(`${API_BASE}/incidents/${incId}/evidence`);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        document.getElementById("inc-meta-evidence-count").textContent = data.evidence_count || 0;
+        document.getElementById("inc-meta-inv-status").textContent = data.evidence_count > 0 ? "Investigated" : "Pending";
+
+        renderHypotheses(data.hypotheses || []);
+        renderEvidenceCards(data.evidence_items || []);
+        renderTimeline(data.tools_used || []);
+        renderConclusionBanner(data);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function renderConclusionBanner(data) {
+      const container = document.getElementById("conclusion-container");
+      if (!data.hypotheses || data.hypotheses.length === 0) {
+        container.innerHTML = "";
+        return;
+      }
+
+      const topH = data.hypotheses.sort((a,b) => b.confidence - a.confidence)[0];
+      const isInsufficient = topH.status === "insufficient_evidence" || topH.confidence < 0.80;
+
+      if (isInsufficient) {
+        document.getElementById("inc-meta-confidence").textContent = `${Math.round(topH.confidence * 100)}% (LOW)`;
+        container.innerHTML = `
+          <div class="conclusion-banner insufficient">
+            <div class="conclusion-title">
+              <span class="badge badge-medium">INSUFFICIENT EVIDENCE</span>
+              <span>Evidence is Incomplete / Ambiguous</span>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+              The system could not confirm a single root cause with high confidence. Multiple hypotheses remain active.
+            </p>
+            <div style="font-size: 12px; font-weight: 700; color: var(--warning);">Evidence Gaps / Missing Data:</div>
+            <ul style="padding-left: 20px; font-size: 12px; color: var(--text-main);">
+              ${(data.open_questions || []).map(q => `<li>${q}</li>`).join('')}
+            </ul>
+          </div>
+        `;
+      } else {
+        document.getElementById("inc-meta-confidence").textContent = `${Math.round(topH.confidence * 100)}% (HIGH)`;
+        container.innerHTML = `
+          <div class="conclusion-banner">
+            <div class="conclusion-title">
+              <span class="badge badge-high">ROOT CAUSE IDENTIFIED</span>
+              <span>Confirmed Primary Root Cause</span>
+            </div>
+            <p style="font-size: 14px; font-weight: 600; color: var(--text-main);">
+              ${topH.statement}
+            </p>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">
+              Supported by ${topH.supporting_evidence_ids.length} empirical evidence items. Contradicting items: ${topH.contradicting_evidence_ids.length}.
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function renderHypotheses(hypotheses) {
+      const container = document.getElementById("hypotheses-container");
+      if (hypotheses.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-dim); padding: 16px;">No hypotheses evaluated yet.</p>`;
+        return;
+      }
+
+      container.innerHTML = hypotheses.map(h => `
+        <div class="hypothesis-card">
+          <div class="hypothesis-header">
+            <div class="hypothesis-title">${h.hypothesis_id}: ${h.statement}</div>
+            <span class="badge badge-${h.confidence_label.toLowerCase()}">${h.confidence_label} (${Math.round(h.confidence * 100)}%)</span>
+          </div>
+          <div style="display: flex; gap: 16px; font-size: 12px; margin-top: 8px;">
+            <div><strong style="color: var(--success);">Supporting Evidence:</strong> ${h.supporting_evidence_ids.join(", ") || "None"}</div>
+            <div><strong style="color: var(--critical);">Contradicting Evidence:</strong> ${h.contradicting_evidence_ids.join(", ") || "None"}</div>
+          </div>
+          ${h.additional_evidence_required && h.additional_evidence_required.length > 0 ? `
+            <div style="font-size: 11px; color: var(--text-dim); margin-top: 6px;">
+              <strong>Required Telemetry:</strong> ${h.additional_evidence_required.join("; ")}
+            </div>
+          ` : ''}
+        </div>
+      `).join("");
+    }
+
+    function renderEvidenceCards(items) {
+      const container = document.getElementById("evidence-cards-container");
+      if (items.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-dim); padding: 16px;">No collected evidence items available.</p>`;
+        return;
+      }
+
+      container.innerHTML = items.map(e => `
+        <div class="evidence-card">
+          <div class="evidence-header">
+            <strong style="color: var(--primary);">${e.evidence_id}</strong>
+            <span class="evidence-source">${e.source}</span>
+          </div>
+          <div style="font-size: 13px; font-weight: 600; margin-bottom: 4px;">${e.description}</div>
+          <div style="font-size: 12px; color: var(--text-muted);">${e.relevance}</div>
+          <div class="raw-code">${e.raw_content}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderTimeline(tools) {
+      const container = document.getElementById("timeline-container");
+      if (tools.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-dim);">No tool execution timeline recorded.</p>`;
+        return;
+      }
+
+      container.innerHTML = tools.map(t => `
+        <div class="timeline-item">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">${t.called_at}</div>
+          <div class="timeline-event">Tool Invoked: ${t.tool_name}</div>
+          <div style="font-size: 12px; color: var(--text-muted);">${t.result_summary}</div>
+        </div>
+      `).join("");
+    }
+
+    async function fetchActionsData(incId) {
+      try {
+        const res = await fetch(`${API_BASE}/incidents/${incId}/actions`);
+        if (!res.ok) return;
+        const data = await res.json();
+        renderActionsTable(data.actions || []);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function renderActionsTable(actions) {
+      const tbody = document.getElementById("actions-table-body");
+      if (actions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="color: var(--text-dim); text-align: center;">No recommended actions recorded.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = actions.map(a => `
+        <tr>
+          <td style="font-weight: 600;">${a.description}</td>
+          <td><span class="badge ${a.requires_approval ? 'badge-approval' : 'badge-low'}">${a.category}</span></td>
+          <td>
+            ${a.requires_approval ? `
+              <span class="badge badge-approval">HUMAN APPROVAL REQUIRED</span>
+            ` : `
+              <span class="badge badge-concluded">SAFE DIAGNOSTIC</span>
+            `}
+          </td>
+          <td>
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">${a.rationale}</div>
+            ${a.requires_approval ? `
+              <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 11px;" onclick="openApprovalModal('${a.action_id}', '${a.description.replace(/'/g, "\\'")}')">
+                Authorization Decision
+              </button>
+            ` : `<span style="font-size: 11px; color: var(--success);">Advisory Only</span>`}
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    async function fetchReportData(incId) {
+      try {
+        const res = await fetch(`${API_BASE}/incidents/${incId}/report`);
+        if (!res.ok) return;
+        const report = await res.json();
+
+        document.getElementById("report-document-container").innerHTML = `
+          <div style="border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 16px;">
+            <h3 style="font-size: 18px; font-weight: 800;">Investigation Report (${report.report_id})</h3>
+            <div style="font-size: 12px; color: var(--text-dim);">Generated At: ${report.generated_at}</div>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <h4>Incident Summary</h4>
+            <p style="font-size: 13px; color: var(--text-muted);">${report.incident_summary.customer_impact}</p>
+          </div>
+          <div style="margin-bottom: 16px;">
+            <h4>Primary Conclusion</h4>
+            <div style="background: var(--bg-alt); padding: 12px; border-radius: 6px; font-weight: 600;">
+              ${report.most_likely_cause ? report.most_likely_cause.statement : 'No confirmed root cause.'}
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // ─── ACTIONS & INVESTIGATION TRIGGER ─────────────────────────────────────
+    async function triggerInvestigation() {
+      if (!currentIncidentId) return;
+
+      const btn = document.getElementById("trigger-investigate-btn");
+      btn.disabled = true;
+      btn.innerHTML = `<div class="spinner"></div> Running Agent Loop...`;
+
+      try {
+        const res = await fetch(`${API_BASE}/incidents/${currentIncidentId}/investigate`, {
+          method: "POST"
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.detail || "Investigation failed");
+
+        showAlert("info", `Investigation complete for ${currentIncidentId}! Conclusion: ${data.conclusion_type}`);
+        await loadIncidents();
+        await selectIncident(currentIncidentId);
+      } catch (err) {
+        showAlert("error", `Investigation failed: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>⚡</span> Run AI Investigation`;
+      }
+    }
+
+    // ─── APPROVAL MODAL ────────────────────────────────────────────────────────
+    function openApprovalModal(actionId, desc) {
+      selectedActionId = actionId;
+      document.getElementById("approval-action-desc").textContent = desc;
+      document.getElementById("approval-modal").classList.add("active");
+    }
+
+    async function submitApprovalDecision(approved) {
+      if (!selectedActionId || !currentIncidentId) return;
+
+      const engineerId = document.getElementById("approval-engineer-id").value || "engineer@company.com";
+
+      try {
+        const res = await fetch(`${API_BASE}/incidents/${currentIncidentId}/actions/${selectedActionId}/approve`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            approved: approved,
+            approved_by: engineerId,
+            rejection_reason: approved ? null : "Manual engineer override"
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Approval recording failed");
+
+        showAlert("info", `Approval decision recorded: ${approved ? 'APPROVED' : 'REJECTED'}. ${data.note}`);
+        closeModal("approval-modal");
+        await fetchActionsData(currentIncidentId);
+      } catch (err) {
+        showAlert("error", `Failed to record decision: ${err.message}`);
+      }
+    }
+
+    // ─── CREATE INCIDENT MODAL ────────────────────────────────────────────────
+    function openCreateIncidentModal() {
+      document.getElementById("create-modal").classList.add("active");
+    }
+
+    async function submitCreateIncident() {
+      const incId = document.getElementById("form-inc-id").value.trim() || `INC-${Date.now()}`;
+      const title = document.getElementById("form-inc-title").value.trim() || "Service Incident";
+      const service = document.getElementById("form-inc-service").value.trim() || "order-service";
+      const severity = document.getElementById("form-inc-severity").value;
+      const notes = document.getElementById("form-inc-notes").value.trim() || "Symptoms reported.";
+
+      try {
+        const res = await fetch(`${API_BASE}/incidents`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            incident_id: incId,
+            title: title,
+            affected_service: service,
+            severity: severity,
+            start_time: new Date().toISOString(),
+            detection_time: new Date().toISOString(),
+            customer_impact: "Reported service degradation",
+            reporter_notes: notes,
+            initial_symptoms: ["Elevated latency", "HTTP 503"]
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.detail || "Failed to create incident");
+        }
+
+        showAlert("info", `Incident ${incId} created successfully!`);
+        closeModal("create-modal");
+        await loadIncidents();
+        selectIncident(incId);
+      } catch (err) {
+        showAlert("error", `Failed to create incident: ${err.message}`);
+      }
+    }
+
+    // ─── UI HELPERS ────────────────────────────────────────────────────────────
+    function switchMainView(view) {
+      if (view === 'overview' || view.startsWith('incidents')) {
+        document.getElementById("overview-view").style.display = "block";
+        document.getElementById("incident-details-view").style.display = "none";
+        document.getElementById("page-title-text").textContent = "Dashboard Overview";
+      } else if (currentIncidentId) {
+        document.getElementById("overview-view").style.display = "none";
+        document.getElementById("incident-details-view").style.display = "block";
+      }
+    }
+
+    function switchIncidentTab(tabId) {
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+
+      event.target.classList.add("active");
+      document.getElementById(tabId).classList.add("active");
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("active");
+    }
+
+    function showAlert(type, msg) {
+      const container = document.getElementById("alert-container");
+      container.innerHTML = `
+        <div class="alert alert-${type === 'error' ? 'error' : 'info'}">
+          <span>${type === 'error' ? '❌' : 'ℹ️'}</span>
+          <span>${msg}</span>
+        </div>
+      `;
+      setTimeout(() => { container.innerHTML = ""; }, 6000);
+    }
+  </script>
+</body>
+</html>

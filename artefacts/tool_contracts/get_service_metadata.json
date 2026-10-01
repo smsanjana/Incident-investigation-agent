@@ -1,0 +1,36 @@
+{
+  "tool_name": "get_service_metadata",
+  "description": "Retrieve service metadata including owner, dependencies, configuration, scheduled jobs, and deployment information.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "service_name": {
+        "type": "string",
+        "description": "The name of the service to retrieve metadata for."
+      }
+    },
+    "required": ["service_name"]
+  },
+  "output_schema": {
+    "type": "object",
+    "description": "Full service metadata object.",
+    "properties": {
+      "name": {"type": "string"},
+      "owner": {"type": "string"},
+      "current_version": {"type": "string"},
+      "deployment_timestamp": {"type": "string"},
+      "replicas": {"type": "integer"},
+      "dependencies": {"type": "array"},
+      "database": {"type": "object"},
+      "timeouts": {"type": "object"},
+      "scheduled_jobs": {"type": "array"},
+      "rollback_capability": {"type": "boolean"},
+      "known_constraints": {"type": "array", "items": {"type": "string"}}
+    }
+  },
+  "error_responses": [
+    {"code": "SERVICE_NOT_FOUND", "description": "No metadata found for the specified service."},
+    {"code": "MALFORMED_METADATA", "description": "Service metadata file is malformed or cannot be parsed."}
+  ],
+  "result_limit": 1
+}

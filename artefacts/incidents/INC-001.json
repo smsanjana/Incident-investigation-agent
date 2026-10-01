@@ -1,0 +1,20 @@
+{
+  "incident_id": "INC-001",
+  "title": "Order Service Intermittent 503 Failures",
+  "start_time": "2025-07-14T02:15:00Z",
+  "detection_time": "2025-07-14T02:22:00Z",
+  "resolution_time": null,
+  "affected_service": "order-service",
+  "severity": "SEV-2",
+  "customer_impact": "Approximately 18% of checkout requests failing with HTTP 503. Customers unable to complete orders.",
+  "initial_symptoms": [
+    "Increased HTTP 503 responses on order-service API",
+    "Elevated request latency (p99 > 4000ms, baseline ~200ms)",
+    "Database timeout errors in order-service DB client logs",
+    "Recent deployment of order-service v2.4.1 at 2025-07-14T01:30:00Z",
+    "Scheduled batch job order-reconciliation started at 2025-07-14T02:10:00Z"
+  ],
+  "reporter": "on-call-engineer@company.com",
+  "reporter_notes": "Alerts fired at 02:22 for high 503 rate. Checked dashboards - see DB timeout errors spiking from ~02:14. Deployment was 45 minutes earlier. Batch job also running. Not sure which is the cause. Need investigation.",
+  "tags": ["order-service", "database", "503", "latency", "batch-job", "deployment"]
+}

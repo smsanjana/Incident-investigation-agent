@@ -1,0 +1,58 @@
+{
+  "tool_name": "get_deployment_events",
+  "description": "Retrieve deployment and infrastructure events filtered by service, time range, and event type.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "service": {
+        "type": "string",
+        "description": "Filter events by service name. Optional."
+      },
+      "start_time": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Start of time range (ISO 8601)."
+      },
+      "end_time": {
+        "type": "string",
+        "format": "date-time",
+        "description": "End of time range (ISO 8601)."
+      },
+      "event_type": {
+        "type": "string",
+        "description": "Filter by event type (e.g., deployment, db_alert, scheduled_job_start). Optional."
+      },
+      "limit": {
+        "type": "integer",
+        "description": "Maximum records to return. Default: 50. Max: 100.",
+        "default": 50
+      }
+    },
+    "required": []
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "events": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "event_id": {"type": "string"},
+            "timestamp": {"type": "string"},
+            "event_type": {"type": "string"},
+            "service": {"type": "string"},
+            "description": {"type": "string"},
+            "details": {"type": "object"}
+          }
+        }
+      },
+      "total": {"type": "integer"}
+    }
+  },
+  "error_responses": [
+    {"code": "INVALID_TIME_RANGE", "description": "Time range is invalid."},
+    {"code": "TIMEOUT", "description": "Query timed out."}
+  ],
+  "result_limit": 100
+}

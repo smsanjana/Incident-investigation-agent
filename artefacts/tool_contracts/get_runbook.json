@@ -1,0 +1,33 @@
+{
+  "tool_name": "get_runbook",
+  "description": "Retrieve a runbook section for a specific incident topic.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "topic": {
+        "type": "string",
+        "enum": ["http_503", "db_connection_pool", "high_latency", "deployment_regression", "batch_job_interference", "safe_rollback", "service_restart"],
+        "description": "The runbook topic to retrieve."
+      }
+    },
+    "required": ["topic"]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "topic": {"type": "string"},
+      "title": {"type": "string"},
+      "symptoms": {"type": "array", "items": {"type": "string"}},
+      "diagnostic_checks": {"type": "array", "items": {"type": "string"}},
+      "evidence_to_collect": {"type": "array", "items": {"type": "string"}},
+      "safe_actions": {"type": "array", "items": {"type": "string"}},
+      "high_risk_actions": {"type": "array", "items": {"type": "string"}},
+      "escalation_conditions": {"type": "array", "items": {"type": "string"}},
+      "raw_content": {"type": "string"}
+    }
+  },
+  "error_responses": [
+    {"code": "TOPIC_NOT_FOUND", "description": "No runbook exists for the requested topic."}
+  ],
+  "result_limit": 1
+}

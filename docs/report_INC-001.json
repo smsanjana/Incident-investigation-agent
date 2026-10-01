@@ -1,0 +1,182 @@
+{
+  "report_id": "RPT-INC-001",
+  "generated_at": "2026-08-06T10:44:15.764121Z",
+  "incident_summary": {
+    "incident_id": "INC-001",
+    "title": "Order Service Intermittent 503 Failures",
+    "affected_service": "order-service",
+    "severity": "SEV-2",
+    "start_time": "2025-07-14T02:15:00Z",
+    "detection_time": "2025-07-14T02:22:00Z",
+    "customer_impact": "Approximately 18% of checkout requests failing with HTTP 503. Customers unable to complete orders."
+  },
+  "timeline": [
+    {
+      "time": "2025-07-14T02:15:00Z",
+      "event": "Incident start",
+      "summary": "Symptoms first observed."
+    },
+    {
+      "time": "2025-07-14T02:22:00Z",
+      "event": "Incident detected",
+      "summary": "Alert fired, investigation begins."
+    },
+    {
+      "time": "2026-08-06T10:44:15.669157Z",
+      "event": "Tool invoked: get_service_metadata",
+      "summary": "Retrieved metadata for order-service.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.681508Z",
+      "event": "Tool invoked: get_deployment_events",
+      "summary": "Found 8 events.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.685089Z",
+      "event": "Tool invoked: search_logs",
+      "summary": "Found 10 records for api-gateway.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.685827Z",
+      "event": "Tool invoked: search_logs",
+      "summary": "Found 7 records for order-service.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.685827Z",
+      "event": "Tool invoked: search_logs",
+      "summary": "Found 6 records for db-client.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.685827Z",
+      "event": "Tool invoked: search_logs",
+      "summary": "Found 2 records for batch-processor.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.685827Z",
+      "event": "Tool invoked: get_runbook",
+      "summary": "Retrieved runbook http_503.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.701107Z",
+      "event": "Tool invoked: get_runbook",
+      "summary": "Retrieved runbook db_connection_pool.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.703561Z",
+      "event": "Tool invoked: get_runbook",
+      "summary": "Retrieved runbook batch_job_interference.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.706534Z",
+      "event": "Tool invoked: get_runbook",
+      "summary": "Retrieved runbook deployment_regression.",
+      "success": true
+    }
+  ],
+  "most_likely_cause": {
+    "hypothesis_id": "H-001",
+    "statement": "Scheduled batch job (order-reconciliation) exhausted the shared DB connection pool (20 max), causing DB timeouts and cascading HTTP 503 errors.",
+    "confidence": 0.92,
+    "confidence_label": "HIGH",
+    "supporting_evidence_count": 3,
+    "contradicting_evidence_count": 0,
+    "status": "confirmed"
+  },
+  "alternative_hypotheses": [
+    {
+      "hypothesis_id": "H-002",
+      "statement": "Recent deployment (order-service v2.4.1 at 01:30Z) introduced a performance regression.",
+      "confidence": 0.15,
+      "confidence_label": "LOW",
+      "status": "ruled_out",
+      "supporting_evidence_count": 0,
+      "contradicting_evidence_count": 1
+    }
+  ],
+  "evidence_reviewed": [
+    {
+      "evidence_id": "EVD-001",
+      "source": "get_deployment_events:batch-processor",
+      "description": "Scheduled job order-reconciliation started at 02:10 UTC",
+      "relevance": "Identifies batch job start time near 503 onset"
+    },
+    {
+      "evidence_id": "EVD-002",
+      "source": "search_logs:db-client",
+      "description": "Connection pool exhausted (20/20 in use) starting 02:14:30Z",
+      "relevance": "Direct cause of database connection timeouts"
+    },
+    {
+      "evidence_id": "EVD-003",
+      "source": "search_logs:order-service",
+      "description": "DB connection timeout errors escalating to HTTP 503 at 02:15Z",
+      "relevance": "Links DB pool exhaustion to customer-facing 503 responses"
+    },
+    {
+      "evidence_id": "EVD-004",
+      "source": "get_deployment_events:order-service",
+      "description": "Deployment of order-service v2.4.1 completed at 01:30Z with 0 errors for 45 minutes",
+      "relevance": "Contradicts hypothesis that deployment v2.4.1 directly caused 02:15 incident"
+    }
+  ],
+  "evidence_gaps": [
+    "Deployment diff audit"
+  ],
+  "recommended_diagnostic_actions": [
+    "Review API gateway and DB client logs to monitor recovery"
+  ],
+  "recommended_remediation": [],
+  "actions_requiring_approval": [
+    {
+      "action_id": "b3d62997-2623-4011-b42b-14a943a5c3d8",
+      "description": "Kill or pause the order-reconciliation batch job process",
+      "category": "HIGH_RISK_OPERATIONAL",
+      "rationale": "Immediately release 16 DB pool connections back to order-service"
+    },
+    {
+      "action_id": "ae021f76-d899-480e-bfac-fcfda94dbf65",
+      "description": "Restart order-service production replicas to reset connection pool state",
+      "category": "HIGH_RISK_OPERATIONAL",
+      "rationale": "Clear stuck connections if needed"
+    }
+  ],
+  "conclusion": {
+    "type": "ROOT_CAUSE_IDENTIFIED",
+    "text": "The root cause of the incident is DB connection pool exhaustion caused by the order-reconciliation batch job acquiring 16 of the 20 available pool connections, leaving insufficient connections for API traffic."
+  },
+  "confidence_and_limitations": {
+    "overall_confidence": 0.92,
+    "confidence_label": "HIGH",
+    "limitations": [
+      "Evidence gap: Deployment diff audit",
+      "Conflicting evidence present \u2014 see alternative hypotheses."
+    ],
+    "tools_invoked": 10,
+    "evidence_items_collected": 4,
+    "hypotheses_evaluated": 2
+  },
+  "investigation_metadata": {
+    "iterations": 1,
+    "tools_used": [
+      "get_service_metadata",
+      "get_deployment_events",
+      "search_logs",
+      "search_logs",
+      "search_logs",
+      "search_logs",
+      "get_runbook",
+      "get_runbook",
+      "get_runbook",
+      "get_runbook"
+    ]
+  }
+}

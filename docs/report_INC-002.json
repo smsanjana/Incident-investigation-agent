@@ -1,0 +1,168 @@
+{
+  "report_id": "RPT-INC-002",
+  "generated_at": "2026-08-06T10:44:15.974846Z",
+  "incident_summary": {
+    "incident_id": "INC-002",
+    "title": "Order Service Intermittent Slow Responses and Failures",
+    "affected_service": "order-service",
+    "severity": "SEV-3",
+    "start_time": "2025-07-21T14:05:00Z",
+    "detection_time": "2025-07-21T14:18:00Z",
+    "customer_impact": "Intermittent slow responses. Approximately 6% of requests failing with HTTP 503. Some customers seeing delayed order confirmations."
+  },
+  "timeline": [
+    {
+      "time": "2025-07-21T14:05:00Z",
+      "event": "Incident start",
+      "summary": "Symptoms first observed."
+    },
+    {
+      "time": "2025-07-21T14:18:00Z",
+      "event": "Incident detected",
+      "summary": "Alert fired, investigation begins."
+    },
+    {
+      "time": "2026-08-06T10:44:15.859547Z",
+      "event": "Tool invoked: get_service_metadata",
+      "summary": "Retrieved metadata for order-service.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.875487Z",
+      "event": "Tool invoked: get_deployment_events",
+      "summary": "Found 8 events.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.875487Z",
+      "event": "Tool invoked: search_logs",
+      "summary": "Found 0 records for api-gateway.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.884663Z",
+      "event": "Tool invoked: search_logs",
+      "summary": "Found 0 records for order-service.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.891998Z",
+      "event": "Tool invoked: search_logs",
+      "summary": "Found 0 records for db-client.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.895158Z",
+      "event": "Tool invoked: search_logs",
+      "summary": "Found 0 records for batch-processor.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.903342Z",
+      "event": "Tool invoked: get_runbook",
+      "summary": "Retrieved runbook http_503.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.908567Z",
+      "event": "Tool invoked: get_runbook",
+      "summary": "Retrieved runbook db_connection_pool.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.914777Z",
+      "event": "Tool invoked: get_runbook",
+      "summary": "Retrieved runbook batch_job_interference.",
+      "success": true
+    },
+    {
+      "time": "2026-08-06T10:44:15.918511Z",
+      "event": "Tool invoked: get_runbook",
+      "summary": "Retrieved runbook deployment_regression.",
+      "success": true
+    }
+  ],
+  "most_likely_cause": {
+    "hypothesis_id": "H-001",
+    "statement": "Batch job (order-export) exhausted the DB connection pool.",
+    "confidence": 0.45,
+    "confidence_label": "MEDIUM",
+    "supporting_evidence_count": 1,
+    "contradicting_evidence_count": 0,
+    "status": "insufficient_evidence"
+  },
+  "alternative_hypotheses": [
+    {
+      "hypothesis_id": "H-002",
+      "statement": "Recent deployment (order-service v2.4.2) introduced a slow query causing timeouts.",
+      "confidence": 0.4,
+      "confidence_label": "MEDIUM",
+      "status": "insufficient_evidence",
+      "supporting_evidence_count": 0,
+      "contradicting_evidence_count": 0
+    }
+  ],
+  "evidence_reviewed": [
+    {
+      "evidence_id": "EVD-001",
+      "source": "get_deployment_events:batch-processor",
+      "description": "Batch job order-export started at 14:00Z but batch end event is missing",
+      "relevance": "Suggests potential batch job involvement"
+    }
+  ],
+  "evidence_gaps": [
+    "Batch job end event confirmation",
+    "Batch job end event is missing from infrastructure events",
+    "Full DB client logs showing pool stats",
+    "Deployment diff for v2.4.2 is not available in artefacts",
+    "Deployment diff for v2.4.2",
+    "DB client logs appear truncated \u2014 missing connection pool statistics",
+    "DB slow query log from DBA"
+  ],
+  "recommended_diagnostic_actions": [
+    "Request complete DB slow query logs from DBA team"
+  ],
+  "recommended_remediation": [],
+  "actions_requiring_approval": [
+    {
+      "action_id": "8f3578aa-543a-4f07-b764-e2700cbfa900",
+      "description": "Rollback deployment v2.4.2 to v2.4.1",
+      "category": "HIGH_RISK_OPERATIONAL",
+      "rationale": "Requires approval: high-risk operational action if deployment regression is suspected"
+    }
+  ],
+  "conclusion": {
+    "type": "INSUFFICIENT_EVIDENCE",
+    "text": "INSUFFICIENT_EVIDENCE: Evidence is incomplete to distinguish between batch job pool exhaustion and deployment regression. Two hypotheses remain active."
+  },
+  "confidence_and_limitations": {
+    "overall_confidence": 0.45,
+    "confidence_label": "MEDIUM",
+    "limitations": [
+      "Evidence gap: Batch job end event confirmation",
+      "Evidence gap: Batch job end event is missing from infrastructure events",
+      "Evidence gap: Full DB client logs showing pool stats",
+      "Evidence gap: Deployment diff for v2.4.2 is not available in artefacts",
+      "Evidence gap: Deployment diff for v2.4.2",
+      "Conflicting evidence present \u2014 see alternative hypotheses."
+    ],
+    "tools_invoked": 10,
+    "evidence_items_collected": 1,
+    "hypotheses_evaluated": 2
+  },
+  "investigation_metadata": {
+    "iterations": 1,
+    "tools_used": [
+      "get_service_metadata",
+      "get_deployment_events",
+      "search_logs",
+      "search_logs",
+      "search_logs",
+      "search_logs",
+      "get_runbook",
+      "get_runbook",
+      "get_runbook",
+      "get_runbook"
+    ]
+  }
+}

@@ -1,0 +1,74 @@
+[
+  {
+    "event_id": "EVT-001",
+    "timestamp": "2025-07-14T01:28:00Z",
+    "event_type": "deployment",
+    "service": "order-service",
+    "description": "Deployment of order-service v2.4.1 initiated by CI/CD pipeline.",
+    "details": {"version": "v2.4.1", "previous_version": "v2.4.0", "triggered_by": "ci-pipeline", "change_type": "minor"}
+  },
+  {
+    "event_id": "EVT-002",
+    "timestamp": "2025-07-14T01:30:05Z",
+    "event_type": "deployment_complete",
+    "service": "order-service",
+    "description": "Deployment of order-service v2.4.1 completed successfully. All replicas healthy.",
+    "details": {"version": "v2.4.1", "replicas_updated": 3, "health_check": "PASS"}
+  },
+  {
+    "event_id": "EVT-003",
+    "timestamp": "2025-07-14T02:09:55Z",
+    "event_type": "scheduled_job_start",
+    "service": "batch-processor",
+    "description": "Scheduled job 'order-reconciliation' triggered by cron (02:10 UTC daily).",
+    "details": {"job_name": "order-reconciliation", "schedule": "0 2 * * *", "host": "batch-worker-1"}
+  },
+  {
+    "event_id": "EVT-004",
+    "timestamp": "2025-07-14T02:10:10Z",
+    "event_type": "db_alert",
+    "service": "order-service",
+    "description": "DB connection pool utilisation exceeded 60% threshold.",
+    "details": {"pool_used": 12, "pool_max": 20, "utilisation_pct": 60, "alert_level": "INFO"}
+  },
+  {
+    "event_id": "EVT-005",
+    "timestamp": "2025-07-14T02:13:00Z",
+    "event_type": "db_alert",
+    "service": "order-service",
+    "description": "DB connection pool utilisation exceeded 80% threshold. Warning level.",
+    "details": {"pool_used": 16, "pool_max": 20, "utilisation_pct": 80, "alert_level": "WARNING"}
+  },
+  {
+    "event_id": "EVT-006",
+    "timestamp": "2025-07-14T02:14:00Z",
+    "event_type": "db_alert",
+    "service": "order-service",
+    "description": "DB connection pool utilisation exceeded 95% threshold. Critical level.",
+    "details": {"pool_used": 19, "pool_max": 20, "utilisation_pct": 95, "alert_level": "CRITICAL"}
+  },
+  {
+    "event_id": "EVT-007",
+    "timestamp": "2025-07-14T02:14:30Z",
+    "event_type": "db_alert",
+    "service": "order-service",
+    "description": "DB connection pool EXHAUSTED (20/20 in use). Incoming requests cannot acquire connections.",
+    "details": {"pool_used": 20, "pool_max": 20, "utilisation_pct": 100, "alert_level": "CRITICAL", "note": "Batch job holding 16 connections"}
+  },
+  {
+    "event_id": "EVT-008",
+    "timestamp": "2025-07-14T02:15:00Z",
+    "event_type": "error_rate_alert",
+    "service": "order-service",
+    "description": "HTTP 503 error rate rising on order-service. Currently 12%.",
+    "details": {"error_rate_pct": 12, "threshold_pct": 5, "alert_level": "WARNING"}
+  },
+  {
+    "event_id": "EVT-009",
+    "timestamp": "2025-07-14T02:22:00Z",
+    "event_type": "error_rate_alert",
+    "service": "order-service",
+    "description": "HTTP 503 error rate 18.3%. PagerDuty incident created.",
+    "details": {"error_rate_pct": 18.3, "threshold_pct": 5, "alert_level": "CRITICAL", "pagerduty_id": "PD-INC-001"}
+  }
+]
